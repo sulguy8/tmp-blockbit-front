@@ -3,7 +3,13 @@ import SvgIcon from '@mui/material/SvgIcon';
 import Link from "next/link";
 
 
-export function BlockBitIcon() {
+export function BlockBitIcon({ linkWrapper = true }) {
+    const svgContent = (
+        <text x="5" y="28" fontFamily="Arial" fontSize="24" fontWeight="bold" fill="#4876EE">
+            BlockBit
+        </text>
+    );
+    
     return (
         <svg
             width="150"
@@ -13,11 +19,13 @@ export function BlockBitIcon() {
             xmlns="http://www.w3.org/2000/svg"
         >
             {/* BlockB */}
-            <Link href="/" passHref>
-                <text x="5" y="28" fontFamily="Arial" fontSize="24" fontWeight="bold" fill="#4876EE">
-                    BlockBit
-                </text>
-            </Link>
+            {linkWrapper ? (
+                <Link href="/" passHref>
+                    {svgContent}
+                </Link>
+            ) : (
+                svgContent
+            )}
         </svg>
     );
 }
