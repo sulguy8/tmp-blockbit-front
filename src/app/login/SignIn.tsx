@@ -81,19 +81,35 @@ export default function SignIn(props: { disableCustomTheme?: boolean}) {
         setOpen(false);
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [loginError, setLoginError] = useState("");
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (emailError || passwordError) {
             return;
         }
+        
+        setIsLoading(true);
+        setLoginError("");
+        
         const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
-            password: data.get('password'),
-        });
-
-        login();
-        router.push("/");
+        const email = data.get('email') as string;
+        const password = data.get('password') as string;
+        
+        try {
+            const success = await login(email, password);
+            if (success) {
+                router.push("/");
+            } else {
+                setLoginError("Invalid email or password. Please try again.");
+            }
+        } catch (error) {
+            console.error("Login error:", error);
+            setLoginError("An error occurred during login. Please try again later.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const validateInputs = () => {
@@ -187,13 +203,19 @@ export default function SignIn(props: { disableCustomTheme?: boolean}) {
                             label="Remember me"
                         />
                         <ForgotPassword open={open} handleClose={handleClose} />
+                        {loginError && (
+                            <Typography color="error" align="center">
+                                {loginError}
+                            </Typography>
+                        )}
                         <Button
                             type="submit"
                             fullWidth
                             variant="contained"
                             onClick={validateInputs}
+                            disabled={isLoading}
                         >
-                            Sign in
+                            {isLoading ? "Signing in..." : "Sign in"}
                         </Button>
                         <Link
                             component="button"

@@ -32,12 +32,16 @@ export default function AppAppBar() {
     const [loggedIn, setLoggedIn] = React.useState(false);
 
     React.useEffect(() => {
-        setLoggedIn(isLoggedIn());
-    }, [])
+        // 컴포넌트가 마운트될 때와 클라이언트 사이드 렌더링 시 로그인 상태 확인
+        if (typeof window !== 'undefined') {
+            setLoggedIn(isLoggedIn());
+        }
+    }, []);
 
     const handleLogout = () => {
         logout();
-        setLoggedIn(isLoggedIn());
+        setLoggedIn(false);
+        window.location.href = '/login';
     };
 
     return (
