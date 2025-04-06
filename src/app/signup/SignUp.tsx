@@ -66,6 +66,11 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [nameError, setNameError] = React.useState(false);
     const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [signupStatus, setSignupStatus] = React.useState<{
+        success: boolean;
+        message: string;
+    } | null>(null);
 
     const validateInputs = () => {
         const email = document.getElementById('email') as HTMLInputElement;
@@ -104,18 +109,62 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
         return isValid;
     };
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (nameError || emailError || passwordError) {
-            event.preventDefault();
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!validateInputs()) {
             return;
         }
+        
+        setIsSubmitting(true);
+        setSignupStatus(null);
+        
         const data = new FormData(event.currentTarget);
-        console.log({
-            name: data.get('name'),
-            lastName: data.get('lastName'),
-            email: data.get('email'),
-            password: data.get('password'),
-        });
+        const userId = data.get('email')?.toString().split('@')[0]; // 이메일 아이디 부분을 사용자 ID로 활용
+        
+        const userData = {
+            usiId: userId,
+            usiPwd: data.get('password'),
+            usiName: data.get('name'),
+            usiPhoneNum: "00000000000", // 기본값 설정
+            usiEmail: data.get('email'),
+            active: '1'
+        };
+
+        try {
+            const response = await fetch('http://localhost:8080/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData),
+            });
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                setSignupStatus({
+                    success: true,
+                    message: '회원가입이 성공적으로 완료되었습니다. 로그인 페이지로 이동합니다.',
+                });
+                // 3초 후 로그인 페이지로 리다이렉트
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 3000);
+            } else {
+                setSignupStatus({
+                    success: false,
+                    message: result.message || '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.',
+                });
+            }
+        } catch (error) {
+            setSignupStatus({
+                success: false,
+                message: '서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            });
+            console.error('Error during sign up:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -186,13 +235,27 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                             control={<Checkbox value="allowExtraEmails" color="primary" />}
                             label="I want to receive updates via email."
                         />
+                        {signupStatus && (
+                            <Typography 
+                                sx={{ 
+                                    textAlign: 'center', 
+                                    color: signupStatus.success ? 'success.main' : 'error.main',
+                                    padding: 1,
+                                    bgcolor: signupStatus.success ? 'success.light' : 'error.light',
+                                    borderRadius: 1,
+                                    opacity: 0.8
+                                }}
+                            >
+                                {signupStatus.message}
+                            </Typography>
+                        )}
                         <Button
                             type="submit"
                             fullWidth
                             variant="contained"
-                            onClick={validateInputs}
+                            disabled={isSubmitting}
                         >
-                            Sign up
+                            {isSubmitting ? 'Processing...' : 'Sign up'}
                         </Button>
                     </Box>
                     <Divider>
@@ -218,7 +281,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
                         <Typography sx={{ textAlign: 'center' }}>
                             Already have an account?{' '}
                             <Link
-                                href="/material-ui/getting-started/templates/sign-in/"
+                                href="/login"
                                 variant="body2"
                                 sx={{ alignSelf: 'center' }}
                             >

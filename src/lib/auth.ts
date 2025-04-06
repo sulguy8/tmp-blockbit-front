@@ -36,8 +36,8 @@ export const login = async (email: string, password: string) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ usiId : email, usiPwd : password }),
-            credentials: 'include', // 쿠키를 자동으로 포함
+            body: JSON.stringify({ usiEmail : email, usiPwd : password }),
+            credentials: 'include',
         });
 
         if (!response.ok) {
